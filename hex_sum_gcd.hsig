@@ -1,0 +1,48 @@
+
+-- gets a range of ints from stdin
+-- calculates the sum of that int's hex representation
+-- finds the gcd of each int with its hex sum
+-- prints the number of ints for which the above was > 1
+--
+-- Complaining about timeouts/memory exhaustion, but I can't really debug right now so
+
+module Main where
+
+import Control.Monad ( forM )
+
+hexBase :: Int
+hexBase = 16
+
+hexSum :: Int -> Int
+hexSum value = if value <= 0 then 0
+               else mod value hexBase + hexSum value `quot` hexBase
+
+inc :: Num a => a -> a
+inc x = x + 1
+
+countUniqueGCDs :: Int -> Int -> Int
+countUniqueGCDs current upper = 
+    let gcd_c = gcd current (hexSum current)
+        nextItr = countUniqueGCDs (inc current) upper
+    in if current > upper then 0
+       else if gcd_c /= 1 then nextItr + 1
+            else nextItr
+
+getRange :: IO [Int]
+getRange = fmap (map read.words) getLine
+
+makeTuple :: Num a => [a] -> (a, a)
+makeTuple [first, second] = (first, second)
+makeTuple mylist = makeTuple (take 2 mylist)
+
+main :: IO()
+main = do
+    num_lines_input <- getLine
+    let num_pairs = (read num_lines_input :: Int)
+    gcdCounts <- forM [1 .. num_pairs] (\a -> do
+        range <- getRange
+        let (lower, upper) = makeTuple range
+        let uniqueGCDs = countUniqueGCDs lower upper
+        print uniqueGCDs)
+    --putStr (unlines (map show gcdCounts))
+    return ()
